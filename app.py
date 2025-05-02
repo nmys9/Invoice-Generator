@@ -68,10 +68,10 @@ def generate_invoice():
     c.drawRightString(width - 50, y, date_text)
     y -= 40
 
-    # رؤوس الجدول
-    headers = ["المنتج", "الكمية", "السعر", "الإجمالي"]
+    # رؤوس الجدول من اليمين لليسار
+    headers = ["الإجمالي", "السعر", "الكمية", "المنتج"]
     header_reshaped = [get_display(arabic_reshaper.reshape(h)) for h in headers]
-    col_widths = [150, 80, 80, 80]
+    col_widths = [80, 80, 80, 150]
     x_start = 50
     y_table = y
 
@@ -91,10 +91,10 @@ def generate_invoice():
         total_all += total
 
         row_data = [
-            get_display(arabic_reshaper.reshape(str(name))),
-            str(qty),
+            str(total),
             str(price),
-            str(total)
+            str(qty),
+            get_display(arabic_reshaper.reshape(str(name)))
         ]
 
         for i, item in enumerate(row_data):
@@ -163,7 +163,6 @@ tk.Button(window, text="إضافة المنتج", command=add_product, bg="#2196
 listbox = tk.Listbox(window, width=70)
 listbox.pack(pady=10)
 
-# حقل الخصم
 tk.Label(window, text="نسبة الخصم (%)", bg="#f0f0f0").pack(pady=5)
 entry_discount = tk.Entry(window, width=20)
 entry_discount.pack()
