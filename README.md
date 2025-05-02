@@ -1,114 +1,68 @@
-# Invoice-Generator
+# Invoice Generator
 
-# 📟 Arabic Invoice Generator – مولد فواتير باللغة العربية
+This is a simple desktop application built with Python and Tkinter to help you generate printable invoices in PDF format. It supports Arabic language and calculates totals, discounts, and final amounts.
 
-تطبيق بسيط لتوليد فواتير PDF باستخدام Python وواجهة رسومية (Tkinter)، مع دعم كامل للغة العربية في التنسيق والطباعة.
+## Features
 
----
+* Add products with quantity and price.
+* Automatically calculate total for each product.
+* Apply a discount percentage.
+* Generate an invoice in Arabic as a PDF file.
+* Clean and user-friendly interface.
+* Supports right-to-left text rendering.
 
-## 📆 متطلبات التشغيل
+## Requirements
 
-قبل البدء، تأكد من توفر:
+* Python 3.7+
+* All required libraries are listed in `requirements.txt`
 
-* Python 3.8 أو أحدث
-* الخط العربي `Amiri-Regular.ttf` في نفس مجلد المشروع
-* مكتبات Python المطلوبة (موجودة في ملف `requirements.txt`)
+## Setup Instructions
 
----
+Follow these steps to run the project locally:
 
-## ⚙️ خطوات تشغيل المشروع
-
-### 1. تحميل المشروع
-
-يمكنك تحميل المشروع عن طريق:
-
-* الضغط على زر `Code` > ثم `Download ZIP`
-* أو باستخدام Git:
-
-  ```bash
-  git clone https://github.com/nmys9/Invoice-Generator.git
-  ```
-
-ثم ادخل إلى مجلد المشروع:
+### 1. Clone the Repository
 
 ```bash
+git clone https://github.com/nmys9/Invoice-Generator.git
 cd Invoice-Generator
 ```
 
----
+### 2. Create a Virtual Environment (Recommended)
 
-### 2. إنشاء بيئة افتراضية (Virtual Environment)
-
-من المفضل تشغيل المشروع على بيئة نظيفة:
+It's best to work in a virtual environment to avoid conflicts:
 
 ```bash
-python -m venv venv
+# For Windows
+python -m venv env
+env\Scripts\activate
+
+# For macOS/Linux
+python3 -m venv env
+source env/bin/activate
 ```
 
-تفعيل البيئة:
+### 3. Install Dependencies
 
-* على Windows:
-
-  ```bash
-  venv\Scripts\activate
-  ```
-* على macOS/Linux:
-
-  ```bash
-  source venv/bin/activate
-  ```
-
----
-
-### 3. تثبيت المكتبات
-
-تم تحديد كل المكتبات اللازمة في `requirements.txt`:
+Install all required Python packages using the `requirements.txt` file:
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+### 4. Run the Application
 
-### 4. تشغيل التطبيق
-
-شغّل الملف الرئيسي:
+Once everything is installed, run the main Python file:
 
 ```bash
-python invoice_generator.py
+python main.py
 ```
 
----
+Make sure you have the Arabic font file `Amiri-Regular.ttf` in the project directory, as it is required to render Arabic text correctly in the PDF.
 
-## 📅 كيف يعمل البرنامج؟
+## Output
 
-* أدخل اسم المنتج والكمية والسعر
-* يمكنك ادخال نسبة خصم (اختياري)
-* اضف أكثر من منتج
-* اضغط على "توليد الفاتورة" وسيتم إنشاء ملف `فاتورة.pdf` بتنسيق عربي من اليمين للشمال
+The generated invoice will be saved as `فاتورة.pdf` in the same directory.
 
----
+## License
 
-## 📁 الملفات الهامة
-
-| الملف                  | الوصف                                |
-| ---------------------- | ------------------------------------ |
-| `invoice_generator.py` | الكود الرئيسي للتطبيق                |
-| `requirements.txt`     | يحتوي على جميع المكتبات اللازمة      |
-| `Amiri-Regular.ttf`    | الخط العربي المستخدم لتنسيق الفاتورة |
-
----
-
-## 📜 ملاحظات
-
-* تأكد من وجود `Amiri-Regular.ttf` في نفس ملف الكود.
-* يعمل البرنامج على أنظمة Windows و Linux.
-* يدعم الكتابة من اليمين للشمال بفضل `arabic-reshaper` و `python-bidi`.
-
----
-
-## 👨‍💼 المطور
-
-تم تطوير المشروع بواسطة Noor – كمشروع تدريبي لدعم اللغة العربية في توليد الفواتير المنسقة.
-
-Feel free to contribute or customize!
+This project is open-source and available for educational and personal use.
