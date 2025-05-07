@@ -47,15 +47,16 @@ class InvoiceGenerator(tk.Tk):
         input_frame.pack(pady=10, padx=10, fill="x")
 
         fields = [
-            ("اسم المنتج:", "entry_product"),
-            ("الكمية:", "entry_quantity"),
-            ("السعر للوحدة:", "entry_price")
+            (":اسم المنتج", "entry_product"),
+            (":الكمية", "entry_quantity"),
+            (":السعر للوحدة", "entry_price")
         ]
 
-        for text, var_name in fields:
-            tk.Label(input_frame, text=text, bg="#f5f5f5").grid(sticky="e")
-            entry = tk.Entry(input_frame, width=40)
-            entry.grid(row=len(input_frame.children)//2, column=1, pady=5)
+        for i, (text, var_name) in enumerate(fields): # استخدام index للتحديد الصف
+            label = tk.Label(input_frame, text=text, bg="#f5f5f5")
+            label.grid(row=i, column=1, sticky="e", padx=5, pady=5) 
+            entry = tk.Entry(input_frame, width=40, justify='right')
+            entry.grid(row=i, column=0, sticky="ew", pady=5) # نفس الصف والالتصاق بالشرق والغرب للتمدد
             setattr(self, var_name, entry)
 
         btn_frame = tk.Frame(self, bg="#f5f5f5")
