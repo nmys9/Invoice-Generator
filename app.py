@@ -9,165 +9,272 @@ from reportlab.lib import colors
 import arabic_reshaper
 from bidi.algorithm import get_display
 import datetime
+import os
 
-# تسجيل الخط
-pdfmetrics.registerFont(TTFont('Arabic', 'Amiri-Regular.ttf'))
+class InvoiceGenerator(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("مولد فواتير متقدم")
+        self.geometry("600x700")
+        self.configure(bg="#f5f5f5")
 
-products = []
+        # متغيرات التطبيق
+        self.products = []
+        self.font_name = "Amiri-Regular.ttf"
+        self.output_file = "فاتورة.pdf"
 
-def add_product():
-    name = entry_product.get()
-    quantity = entry_quantity.get()
-    price = entry_price.get()
+        # تهيئة الخط العربي
+        self._setup_fonts()
 
-    if not name or not quantity or not price:
-        messagebox.showerror("خطأ", "يرجى تعبئة جميع الحقول")
-        return
+        # إنشاء واجهة المستخدم
+        self._create_widgets()
 
-    try:
-        quantity = int(quantity)
-        price = float(price)
-        total = quantity * price
-        products.append((name, quantity, price, total))
+        # ربط زر الإدخال بإضافة منتج
+        self.bind('<Return>', lambda e: self.add_product())
+        self.entry_product = self.entry_product # لتسهيل الوصول
 
-        listbox.insert(tk.END, f"{name} - الكمية: {quantity} - السعر: {price} - الإجمالي: {total}")
-        clear_fields()
+    def _setup_fonts(self):
+        """تسجيل الخط العربي المستخدم في الفاتورة"""
+        try:
+            pdfmetrics.registerFont(TTFont('Arabic', self.font_name))
+        except Exception as e:
+            messagebox.showerror("خطأ", f"الخط {self.font_name} غير موجود. يرجى تثبيته أولاً.\n{e}")
+            self.destroy()
 
-    except ValueError:
-        messagebox.showerror("خطأ", "تأكد من أن الكمية والسعر أرقام صحيحة")
+    def _create_widgets(self):
+        """إنشاء عناصر واجهة المستخدم"""
+        # إطار الإدخال
+        input_frame = tk.LabelFrame(self, text="بيانات المنتج", bg="#f5f5f5", padx=10, pady=10)
+        input_frame.pack(pady=10, padx=10, fill="x")
 
-def generate_invoice():
-    if not products:
-        messagebox.showerror("خطأ", "لم يتم إضافة أي منتج")
-        return
-
-    try:
-        discount_percent = float(entry_discount.get() or 0)
-    except ValueError:
-        messagebox.showerror("خطأ", "نسبة الخصم يجب أن تكون رقمًا")
-        return
-
-    now = datetime.datetime.now()
-    date_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
-    c = canvas.Canvas("فاتورة.pdf", pagesize=A4)
-    c.setFont("Arabic", 14)
-
-    width, height = A4
-    y = height - 50
-
-    # عنوان الفاتورة
-    title = get_display(arabic_reshaper.reshape("فاتورة شراء"))
-    c.setFont("Arabic", 20)
-    c.drawCentredString(width / 2, y, title)
-    y -= 30
-
-    # التاريخ
-    c.setFont("Arabic", 12)
-    date_text = get_display(arabic_reshaper.reshape(f"تاريخ الإنشاء: {date_str}"))
-    c.drawRightString(width - 50, y, date_text)
-    y -= 40
-
-    # رؤوس الجدول من اليمين لليسار
-    headers = ["الإجمالي", "السعر", "الكمية", "المنتج"]
-    header_reshaped = [get_display(arabic_reshaper.reshape(h)) for h in headers]
-    col_widths = [80, 80, 80, 150]
-    x_start = 50
-    y_table = y
-
-    # خلفية الرأس
-    c.setFillColorRGB(0.9, 0.9, 0.9)
-    c.rect(x_start, y_table, sum(col_widths), 25, fill=1)
-    c.setFillColor(colors.black)
-
-    for i, h in enumerate(header_reshaped):
-        c.drawCentredString(x_start + sum(col_widths[:i]) + col_widths[i]/2, y_table + 7, h)
-
-    y_table -= 30
-    total_all = 0
-
-    for product in products:
-        name, qty, price, total = product
-        total_all += total
-
-        row_data = [
-            str(total),
-            str(price),
-            str(qty),
-            get_display(arabic_reshaper.reshape(str(name)))
+        # حقول الإدخال
+        fields = [
+            ("اسم المنتج:", "entry_product"),
+            ("الكمية:", "entry_quantity"),
+            ("السعر للوحدة:", "entry_price")
         ]
 
-        for i, item in enumerate(row_data):
-            c.drawCentredString(x_start + sum(col_widths[:i]) + col_widths[i]/2, y_table + 7, item)
+        for text, var_name in fields:
+            tk.Label(input_frame, text=text, bg="#f5f5f5").grid(sticky="e")
+            entry = tk.Entry(input_frame, width=40)
+            entry.grid(row=len(input_frame.children)//2, column=1, pady=5)
+            setattr(self, var_name, entry)
 
-        y_table -= 25
+        # أزرار التحكم
+        btn_frame = tk.Frame(self, bg="#f5f5f5")
+        btn_frame.pack(pady=5)
 
-    c.line(x_start, y_table, x_start + sum(col_widths), y_table)
-    y_table -= 30
+        buttons = [
+            ("إضافة المنتج", "#2196F3", self.add_product),
+            ("توليد الفاتورة", "#4CAF50", self.generate_invoice),
+            ("تفريغ الكل", "#f44336", self.clear_all),
+            ("فتح الفاتورة", "#FF9800", self.open_invoice)
+        ]
 
-    # الحسابات المالية
-    discount_value = (discount_percent / 100) * total_all
-    final_amount = total_all - discount_value
+        for text, color, command in buttons:
+            tk.Button(btn_frame, text=text, bg=color, fg="white",
+                      command=command).pack(side="left", padx=5)
 
-    # المبلغ الإجمالي
-    c.setFont("Arabic", 14)
-    total_text = get_display(arabic_reshaper.reshape(f"المبلغ الإجمالي: {total_all:.2f} شيكل"))
-    c.drawRightString(width - 50, y_table, total_text)
-    y_table -= 25
+        # قائمة المنتجات
+        list_frame = tk.LabelFrame(self, text="المنتجات المضافة", bg="#f5f5f5")
+        list_frame.pack(pady=10, padx=10, fill="both", expand=True)
 
-    # الخصم
-    discount_text = get_display(arabic_reshaper.reshape(f"قيمة الخصم ({discount_percent}%): {discount_value:.2f} شيكل"))
-    c.drawRightString(width - 50, y_table, discount_text)
-    y_table -= 25
+        scrollbar = tk.Scrollbar(list_frame)
+        scrollbar.pack(side="right", fill="y")
 
-    # المبلغ بعد الخصم
-    final_text = get_display(arabic_reshaper.reshape(f"المبلغ بعد الخصم: {final_amount:.2f} شيكل"))
-    c.setFont("Arabic", 16)
-    c.setFillColor(colors.darkblue)
-    c.drawRightString(width - 50, y_table, final_text)
+        self.listbox = tk.Listbox(list_frame, width=70, height=10,
+                                    yscrollcommand=scrollbar.set)
+        self.listbox.pack(fill="both", expand=True)
+        scrollbar.config(command=self.listbox.yview)
 
-    c.save()
-    messagebox.showinfo("تم", "تم حفظ الفاتورة باسم 'فاتورة.pdf'")
+        # حقل الخصم
+        discount_frame = tk.Frame(self, bg="#f5f5f5")
+        discount_frame.pack(pady=5)
 
-def clear_fields():
-    entry_product.delete(0, tk.END)
-    entry_quantity.delete(0, tk.END)
-    entry_price.delete(0, tk.END)
+        tk.Label(discount_frame, text="نسبة الخصم (%):", bg="#f5f5f5").pack(side="left")
+        self.entry_discount = tk.Entry(discount_frame, width=10)
+        self.entry_discount.pack(side="left", padx=5)
+        self.entry_discount.insert(0, "0")
 
-def clear_all():
-    clear_fields()
-    listbox.delete(0, tk.END)
-    products.clear()
-    entry_discount.delete(0, tk.END)
+    def add_product(self):
+        """إضافة منتج جديد إلى القائمة"""
+        name = self.entry_product.get().strip()
+        quantity = self.entry_quantity.get().strip()
+        price = self.entry_price.get().strip()
 
-# واجهة المستخدم
-window = tk.Tk()
-window.title("مولد فواتير")
-window.geometry("500x600")
-window.configure(bg="#f0f0f0")
+        # التحقق من الحقول المطلوبة
+        if not all([name, quantity, price]):
+            messagebox.showerror("خطأ", "يرجى تعبئة جميع الحقول")
+            return
 
-tk.Label(window, text="اسم المنتج:", bg="#f0f0f0").pack(pady=5)
-entry_product = tk.Entry(window, width=50)
-entry_product.pack()
+        # التحقق من صحة الأرقام
+        try:
+            quantity = int(quantity)
+            price = float(price)
 
-tk.Label(window, text="الكمية:", bg="#f0f0f0").pack(pady=5)
-entry_quantity = tk.Entry(window, width=50)
-entry_quantity.pack()
+            if quantity <= 0 or price <= 0:
+                raise ValueError
 
-tk.Label(window, text="السعر للوحدة:", bg="#f0f0f0").pack(pady=5)
-entry_price = tk.Entry(window, width=50)
-entry_price.pack()
+            total = quantity * price
+            self.products.append((name, quantity, price, total))
 
-tk.Button(window, text="إضافة المنتج", command=add_product, bg="#2196F3", fg="white").pack(pady=10)
+            text = f"{name} -> الكمية: {quantity} - السعر: {price:.2f} - الإجمالي: {total:.2f}"
 
-listbox = tk.Listbox(window, width=70)
-listbox.pack(pady=10)
+            # إعادة تشكيل النص العربي
+            reshaped_text = arabic_reshaper.reshape(text)
+            bidi_text = get_display(reshaped_text)
 
-tk.Label(window, text="نسبة الخصم (%)", bg="#f0f0f0").pack(pady=5)
-entry_discount = tk.Entry(window, width=20)
-entry_discount.pack()
+            # إضافة المنتج إلى القائمة
+            self.listbox.insert(tk.END, bidi_text)
 
-tk.Button(window, text="توليد الفاتورة", command=generate_invoice, bg="#4CAF50", fg="white").pack(pady=5)
-tk.Button(window, text="تفريغ الكل", command=clear_all, bg="#f44336", fg="white").pack(pady=5)
+            self.clear_fields()
 
-window.mainloop()
+        except ValueError:
+            messagebox.showerror("خطأ", "الكمية يجب أن تكون عدد صحيح والسعر عدد موجب")
+
+    def generate_invoice(self):
+        """توليد ملف PDF للفاتورة"""
+        if not self.products:
+            messagebox.showerror("خطأ", "لم يتم إضافة أي منتج")
+            return
+
+        # التحقق من نسبة الخصم
+        try:
+            discount_percent = float(self.entry_discount.get() or 0)
+            if discount_percent < 0 or discount_percent > 100:
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("خطأ", "نسبة الخصم يجب أن تكون بين 0 و 100")
+            return
+
+        # إنشاء الفاتورة
+        try:
+            c = canvas.Canvas(self.output_file, pagesize=A4)
+            width, height = A4
+
+            # إعداد الخط
+            c.setFont("Arabic", 14)
+
+            # معلومات الفاتورة الأساسية
+            self._draw_header(c, width, height)
+
+            # جدول المنتجات
+            self._draw_products_table(c, width, height - 120) # تم تعديل قيمة البدء
+
+            # الحسابات النهائية
+            self._draw_calculations(c, width, height - 120 - len(self.products)*25 - 50, discount_percent) # وتم تعديلها هنا أيضاً
+
+            # حفظ الملف
+            c.save()
+            messagebox.showinfo("تم", f"تم حفظ الفاتورة باسم '{self.output_file}'")
+
+        except Exception as e:
+            messagebox.showerror("خطأ", f"حدث خطأ أثناء إنشاء الفاتورة: {str(e)}")
+
+    def _draw_header(self, c, width, height):
+        """رسم رأس الفاتورة"""
+        # عنوان الفاتورة
+        title = self._format_arabic("فاتورة شراء")
+        c.setFont("Arabic", 20)
+        c.drawCentredString(width / 2, height - 50, title)
+
+        # التاريخ والوقت
+        date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        date_text = self._format_arabic(f"تاريخ الإنشاء: {date_str}")
+        c.setFont("Arabic", 12)
+        c.drawRightString(width - 50, height - 80, date_text)
+
+    def _draw_products_table(self, c, width, start_y):
+        """رسم جدول المنتجات"""
+        headers = ["الإجمالي", "السعر", "الكمية", "المنتج"]
+        col_widths = [80, 80, 80, 160]
+        x_start = 50
+
+        # رأس الجدول
+        c.setFillColorRGB(0.9, 0.9, 0.9)
+        c.rect(x_start, start_y, sum(col_widths), 25, fill=1)
+        c.setFillColor(colors.black)
+
+        for i, h in enumerate(headers):
+            c.drawCentredString(x_start + sum(col_widths[:i]) + col_widths[i]/2,
+                                    start_y + 7,
+                                    self._format_arabic(h))
+
+        # بيانات المنتجات
+        y = start_y - 25
+        for product in self.products:
+            name, qty, price, total = product
+
+            row_data = [
+                self._format_arabic(f"{total:.2f}"),
+                self._format_arabic(f"{price:.2f}"),
+                self._format_arabic(str(qty)),
+                self._format_arabic(name)
+            ]
+
+            for i, item in enumerate(row_data):
+                c.drawCentredString(x_start + sum(col_widths[:i]) + col_widths[i]/2,
+                                        y + 7,
+                                        item)
+
+            y -= 25
+
+        # خط نهاية الجدول
+        c.line(x_start, y, x_start + sum(col_widths), y)
+
+    def _draw_calculations(self, c, width, y, discount_percent):
+        """رسم الحسابات النهائية"""
+        total_all = sum(product[3] for product in self.products)
+        discount_value = (discount_percent / 100) * total_all
+        final_amount = total_all - discount_value
+
+        # المبلغ الإجمالي
+        total_text = self._format_arabic(f"المبلغ الإجمالي: {total_all:.2f} شيكل")
+        c.drawRightString(width - 50, y, total_text)
+
+        # الخصم
+        discount_text = self._format_arabic(f"قيمة الخصم ({discount_percent}%): {discount_value:.2f} شيكل")
+        c.drawRightString(width - 50, y - 25, discount_text)
+
+        # المبلغ النهائي
+        final_text = self._format_arabic(f"المبلغ بعد الخصم: {final_amount:.2f} شيكل")
+        c.setFont("Arabic", 16)
+        c.setFillColor(colors.darkblue)
+        c.drawRightString(width - 50, y - 50, final_text)
+
+    def _format_arabic(self, text):
+        """تنسيق النص العربي للعرض الصحيح"""
+        return get_display(arabic_reshaper.reshape(str(text)))
+
+    def open_invoice(self):
+        """فتح ملف الفاتورة باستخدام البرنامج الافتراضي"""
+        if not os.path.exists(self.output_file):
+            messagebox.showerror("خطأ", "الفاتورة غير موجودة، يرجى توليدها أولاً")
+            return
+
+        try:
+            os.startfile(self.output_file)  # لنظام ويندوز
+        except AttributeError:
+            try:
+                os.system(f'xdg-open "{self.output_file}"')  # لنظام لينكس
+            except:
+                messagebox.showinfo("تم", f"تم حفظ الفاتورة في: {os.path.abspath(self.output_file)}")
+
+    def clear_fields(self):
+        """مسح حقول الإدخال"""
+        self.entry_product.delete(0, tk.END)
+        self.entry_quantity.delete(0, tk.END)
+        self.entry_price.delete(0, tk.END)
+        self.entry_product.focus_set()
+
+    def clear_all(self):
+        """مسح كل البيانات"""
+        self.clear_fields()
+        self.listbox.delete(0, tk.END)
+        self.products.clear()
+        self.entry_discount.delete(0, tk.END)
+        self.entry_discount.insert(0, "0")
+
+if __name__ == "__main__":
+    app = InvoiceGenerator()
+    app.mainloop()
