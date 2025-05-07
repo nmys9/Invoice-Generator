@@ -43,11 +43,9 @@ class InvoiceGenerator(tk.Tk):
 
     def _create_widgets(self):
         """إنشاء عناصر واجهة المستخدم"""
-        # إطار الإدخال
         input_frame = tk.LabelFrame(self, text="بيانات المنتج", bg="#f5f5f5", padx=10, pady=10)
         input_frame.pack(pady=10, padx=10, fill="x")
 
-        # حقول الإدخال
         fields = [
             ("اسم المنتج:", "entry_product"),
             ("الكمية:", "entry_quantity"),
@@ -60,7 +58,6 @@ class InvoiceGenerator(tk.Tk):
             entry.grid(row=len(input_frame.children)//2, column=1, pady=5)
             setattr(self, var_name, entry)
 
-        # أزرار التحكم
         btn_frame = tk.Frame(self, bg="#f5f5f5")
         btn_frame.pack(pady=5)
 
@@ -73,9 +70,8 @@ class InvoiceGenerator(tk.Tk):
 
         for text, color, command in buttons:
             tk.Button(btn_frame, text=text, bg=color, fg="white",
-                      command=command).pack(side="left", padx=5)
+                    command=command).pack(side="left", padx=5)
 
-        # قائمة المنتجات
         list_frame = tk.LabelFrame(self, text="المنتجات المضافة", bg="#f5f5f5")
         list_frame.pack(pady=10, padx=10, fill="both", expand=True)
 
@@ -87,7 +83,6 @@ class InvoiceGenerator(tk.Tk):
         self.listbox.pack(fill="both", expand=True)
         scrollbar.config(command=self.listbox.yview)
 
-        # حقل الخصم
         discount_frame = tk.Frame(self, bg="#f5f5f5")
         discount_frame.pack(pady=5)
 
@@ -102,12 +97,10 @@ class InvoiceGenerator(tk.Tk):
         quantity = self.entry_quantity.get().strip()
         price = self.entry_price.get().strip()
 
-        # التحقق من الحقول المطلوبة
         if not all([name, quantity, price]):
             messagebox.showerror("خطأ", "يرجى تعبئة جميع الحقول")
             return
 
-        # التحقق من صحة الأرقام
         try:
             quantity = int(quantity)
             price = float(price)
@@ -120,11 +113,9 @@ class InvoiceGenerator(tk.Tk):
 
             text = f"{name} -> الكمية: {quantity} - السعر: {price:.2f} - الإجمالي: {total:.2f}"
 
-            # إعادة تشكيل النص العربي
             reshaped_text = arabic_reshaper.reshape(text)
             bidi_text = get_display(reshaped_text)
 
-            # إضافة المنتج إلى القائمة
             self.listbox.insert(tk.END, bidi_text)
 
             self.clear_fields()
@@ -138,7 +129,6 @@ class InvoiceGenerator(tk.Tk):
             messagebox.showerror("خطأ", "لم يتم إضافة أي منتج")
             return
 
-        # التحقق من نسبة الخصم
         try:
             discount_percent = float(self.entry_discount.get() or 0)
             if discount_percent < 0 or discount_percent > 100:
@@ -147,7 +137,6 @@ class InvoiceGenerator(tk.Tk):
             messagebox.showerror("خطأ", "نسبة الخصم يجب أن تكون بين 0 و 100")
             return
 
-        # إنشاء الفاتورة
         try:
             c = canvas.Canvas(self.output_file, pagesize=A4)
             width, height = A4
@@ -190,7 +179,6 @@ class InvoiceGenerator(tk.Tk):
         col_widths = [80, 80, 80, 160]
         x_start = 50
 
-        # رأس الجدول
         c.setFillColorRGB(0.9, 0.9, 0.9)
         c.rect(x_start, start_y, sum(col_widths), 25, fill=1)
         c.setFillColor(colors.black)
