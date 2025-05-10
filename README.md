@@ -54,7 +54,7 @@ pip install -r requirements.txt
 Once everything is installed, run the main Python file:
 
 ```bash
-python main.py
+python app.py
 ```
 
 Make sure you have the Arabic font file `Amiri-Regular.ttf` in the project directory, as it is required to render Arabic text correctly in the PDF.
