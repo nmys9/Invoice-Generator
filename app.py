@@ -18,18 +18,18 @@ class InvoiceGenerator(tk.Tk):
         self.geometry("600x700")
         self.configure(bg="#f5f5f5")
 
-        # متغيرات التطبيق
+        # المتغيرات اللازمه لتطبيق
         self.products = []
         self.font_name = "Amiri-Regular.ttf"
         self.output_file = "فاتورة.pdf"
 
-        # تهيئة الخط العربي
+        # استدعاء لتسجيل الخط العربي
         self._setup_fonts()
 
         # إنشاء واجهة المستخدم
         self._create_widgets()
 
-        # ربط زر الإدخال بإضافة منتج
+        # ربط زر الإدخال  لإضافة منتج
         self.bind('<Return>', lambda e: self.add_product())
         self.entry_product = self.entry_product # لتسهيل الوصول
 
@@ -42,7 +42,7 @@ class InvoiceGenerator(tk.Tk):
             self.destroy()
 
     def _create_widgets(self):
-        """إنشاء عناصر واجهة المستخدم"""
+        """إنشاء حقول  واجهة المستخدم"""
         input_frame = tk.LabelFrame(self, text="بيانات المنتج", bg="#f5f5f5", padx=10, pady=10)
         input_frame.pack(pady=10, padx=10, fill="x")
 
